@@ -1,0 +1,11 @@
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 5
+
+mysql:
+  enabled: true
+  auth:
+    rootPassword: "admin"
+    password: "password"
+    database: "snippetbox"

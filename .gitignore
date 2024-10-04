@@ -21,5 +21,8 @@
 go.work
 go.work.sum
 
+# Other workspace files
+dist/*
+
 # env file
 .env

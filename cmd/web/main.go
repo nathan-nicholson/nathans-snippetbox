@@ -1,49 +1,70 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
+
+	_ "github.com/go-sql-driver/mysql"
+	"snippetbox.nathan-r-nicholson.com/internal/models"
 )
 
 type application struct {
-	logger *slog.Logger
+	logger   *slog.Logger
+	snippets *models.SnippetModel
 }
 
 func main() {
 
 	addr := flag.String("addr", ":4000", "HTTP network address")
+	dbUser := flag.String("dbuser", "web2", "MySQL database user")
+	dbPass := flag.String("dbpass", "Snippets4Days", "MySQL database password")
+	dbHost := flag.String("dbhost", "my-snippetbox-mysql.my-snippetbox.svc.cluster.local", "MySQL database host")
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	}))
 
-	// Initialize a new instance of application containing the dependencies
-	app := &application{
-		logger: logger,
+	db, err := openDB(fmt.Sprintf("%s:%s@tcp(%s:3306)/snippetbox?parseTime=true", *dbUser, *dbPass, *dbHost))
+
+	if err != nil {
+		logger.Error("cannot connect to database", "error", err)
+		os.Exit(1)
 	}
 
-	mux := http.NewServeMux()
+	defer db.Close()
 
-	fileServer := http.FileServer(http.Dir("./ui/static/"))
+	// Initialize a new instance of application containing the dependencies
+	app := &application{
+		logger:   logger,
+		snippets: &models.SnippetModel{DB: db},
+	}
 
-	// Serve static files using the file server
-	mux.Handle("GET /static/", http.StripPrefix("/static", fileServer))
-
-	// Register routes
-	mux.HandleFunc("GET /{$}", app.home)
-	mux.HandleFunc("GET /snippet/view/{id}", app.viewSnippet)
-	mux.HandleFunc("GET /snippet/create", app.createSnippet)
-	mux.HandleFunc("POST /snippet/create", app.createSnippetPost)
+	mux := app.routes()
 
 	logger.Info("starting server", slog.String("addr", *addr))
 
-	err := http.ListenAndServe(*addr, mux)
+	err = http.ListenAndServe(*addr, mux)
 
 	if err != nil {
 		logger.Error("server failed to start", "error", err)
 		os.Exit(1)
 	}
+}
+
+func openDB(dsn string) (*sql.DB, error) {
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := db.Ping(); err != nil {
+		return nil, err
+	}
+
+	return db, nil
 }
