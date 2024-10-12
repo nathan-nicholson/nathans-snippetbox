@@ -20,7 +20,7 @@ type application struct {
 func main() {
 
 	addr := flag.String("addr", ":4000", "HTTP network address")
-	dbUser := flag.String("dbuser", "web2", "MySQL database user")
+	dbUser := flag.String("dbuser", "web", "MySQL database user")
 	dbPass := flag.String("dbpass", "Snippets4Days", "MySQL database password")
 	dbHost := flag.String("dbhost", "my-snippetbox-mysql.my-snippetbox.svc.cluster.local", "MySQL database host")
 	flag.Parse()

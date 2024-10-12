@@ -1,6 +1,6 @@
 #!/bin/bash
 
-IMAGE_NAME=$1
+IMAGE_NAME=${1:-snippetbox}
 TAG=${2:-latest}
 
 # Load the image into the kind cluster

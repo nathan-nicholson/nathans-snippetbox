@@ -15,7 +15,7 @@ COPY ./internal ./internal
 COPY ./ui ./ui
 
 # Build the Go app
-RUN env ${opts} go build -o /app/snippetbox ./cmd/web
+RUN env ${opts} go build -v -o /app/snippetbox ./cmd/web
 
 # Use a minimal image to run the binary
 FROM --platform=$BUILDPLATFORM ubuntu:24.10

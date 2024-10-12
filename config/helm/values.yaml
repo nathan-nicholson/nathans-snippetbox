@@ -9,3 +9,4 @@ mysql:
     rootPassword: "admin"
     password: "password"
     database: "snippetbox"
+  initdbScriptsConfigMap: "my-snippetbox-db-init"
