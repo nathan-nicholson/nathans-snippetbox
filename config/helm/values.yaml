@@ -1,3 +1,6 @@
+service:
+  port: 4000
+
 autoscaling:
   enabled: true
   minReplicas: 3

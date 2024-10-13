@@ -12,6 +12,13 @@ import (
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Server", "Go")
 
+	_, err := app.snippets.Latest()
+
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
 	templatePaths := []string{
 		"./ui/html/base.tmpl",
 		"./ui/html/partials/nav.tmpl",
@@ -38,6 +45,7 @@ func (app *application) healthcheck(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *application) viewSnippet(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Server", "Go")
 	snippetId, err := strconv.Atoi(r.PathValue("id"))
 
 	if err != nil || snippetId < 1 {
@@ -56,7 +64,26 @@ func (app *application) viewSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "%+v", snippet)
+	files := []string{
+		"./ui/html/base.tmpl",
+		"./ui/html/partials/nav.tmpl",
+		"./ui/html/pages/view.tmpl",
+	}
+
+	ts, err := template.ParseFiles(files...)
+
+	if err != nil {
+		app.serverError(w, r, err)
+		return
+	}
+
+	templateData := &templateData{Snippet: snippet}
+
+	err = ts.ExecuteTemplate(w, "base", templateData)
+
+	if err != nil {
+		app.serverError(w, r, err)
+	}
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
