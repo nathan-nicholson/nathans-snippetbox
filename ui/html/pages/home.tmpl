@@ -2,5 +2,27 @@
 
 {{define "main"}}
     <h2>Latest Snippets</h2>
-    <p>Hello! My name is Nathan.</p>
+    {{with .Snippets}}
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>ID</th>
+                    <th>Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .}}
+                    <tr>
+                        <td><a href="/snippet/view/{{.ID}}">{{.Title}}</a></td>
+                        <td><time>{{humanDate .Created}}</time></td>
+                        <td>#{{.ID}}</a></td>
+                    </tr>
+                {{end}}
+            </tbody>
+        </table>
+    {{else}}
+        <p>No snippets found</p>
+    {{end}}
+
 {{end}}

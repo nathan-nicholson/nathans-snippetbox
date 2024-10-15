@@ -2,50 +2,33 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
 
 	"snippetbox.nathan-r-nicholson.com/internal/models"
 )
 
-func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Server", "Go")
+func (app *application) healthcheck(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, "OK")
+}
 
-	_, err := app.snippets.Latest()
+func (app *application) home(w http.ResponseWriter, r *http.Request) {
+
+	snippets, err := app.snippets.Latest()
 
 	if err != nil {
 		app.serverError(w, r, err)
 		return
 	}
 
-	templatePaths := []string{
-		"./ui/html/base.tmpl",
-		"./ui/html/partials/nav.tmpl",
-		"./ui/html/pages/home.tmpl",
-	}
+	templateData := newTemplateData(r)
+	templateData.Snippets = snippets
 
-	ts, err := template.ParseFiles(templatePaths...)
-
-	if err != nil {
-		app.serverError(w, r, err)
-	}
-
-	err = ts.ExecuteTemplate(w, "base", nil)
-
-	if err != nil {
-		app.serverError(w, r, err)
-	}
-}
-
-func (app *application) healthcheck(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Server", "Go")
-	w.WriteHeader(http.StatusOK)
-	fmt.Fprintf(w, "OK")
+	app.render(w, r, http.StatusOK, "home.tmpl", templateData)
 }
 
 func (app *application) viewSnippet(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Server", "Go")
 	snippetId, err := strconv.Atoi(r.PathValue("id"))
 
 	if err != nil || snippetId < 1 {
@@ -64,26 +47,10 @@ func (app *application) viewSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	files := []string{
-		"./ui/html/base.tmpl",
-		"./ui/html/partials/nav.tmpl",
-		"./ui/html/pages/view.tmpl",
-	}
+	templateData := newTemplateData(r)
+	templateData.Snippet = snippet
 
-	ts, err := template.ParseFiles(files...)
-
-	if err != nil {
-		app.serverError(w, r, err)
-		return
-	}
-
-	templateData := &templateData{Snippet: snippet}
-
-	err = ts.ExecuteTemplate(w, "base", templateData)
-
-	if err != nil {
-		app.serverError(w, r, err)
-	}
+	app.render(w, r, http.StatusOK, "view.tmpl", templateData)
 }
 
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {

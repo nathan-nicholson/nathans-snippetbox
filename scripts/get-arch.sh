@@ -10,7 +10,7 @@ case $ARCH in
   x86_64)
     echo "linux/amd64"
     ;;
-  aarch64)
+  arm64)
     echo "linux/arm64"
     ;;
   *)

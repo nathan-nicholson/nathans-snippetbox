@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Fail fast
+set -eou pipefail
+
 ./scripts/build.sh
 
 ./scripts/load-kind-with-image.sh
