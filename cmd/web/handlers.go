@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
+	"unicode/utf8"
 
 	"snippetbox.nathan-r-nicholson.com/internal/models"
 )
@@ -53,17 +55,73 @@ func (app *application) viewSnippet(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, http.StatusOK, "view.tmpl", templateData)
 }
 
+type snippetCreateForm struct {
+	Title       string
+	Content     string
+	Expires     int
+	FieldErrors map[string]string
+}
+
 func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Display form to create a new snippet...")
+	templateData := newTemplateData(r)
+
+	templateData.Form = snippetCreateForm{
+		Expires: 365,
+	}
+
+	app.render(w, r, http.StatusOK, "create.tmpl", templateData)
 }
 
 func (app *application) createSnippetPost(w http.ResponseWriter, r *http.Request) {
 
-	title := "O snail"
-	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n- Kobayashi Issa"
-	expires := 7
+	err := r.ParseForm()
 
-	id, err := app.snippets.Insert(title, content, expires)
+	if err != nil {
+		app.logger.Error("failed to parse form", "error", err)
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	title := r.PostForm.Get("title")
+	content := r.PostForm.Get("content")
+	expires, err := strconv.Atoi(r.PostForm.Get("expires"))
+
+	if err != nil {
+		app.logger.Error("expire date cannot be parsed to number", "error", err)
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form := snippetCreateForm{
+		Title:       title,
+		Content:     content,
+		Expires:     expires,
+		FieldErrors: make(map[string]string),
+	}
+
+	if strings.TrimSpace(form.Title) == "" {
+		form.FieldErrors["title"] = "Title is required"
+	} else if utf8.RuneCountInString(form.Title) > 100 {
+		form.FieldErrors["title"] = "Title is too long (maximum is 100 characters)"
+	}
+
+	if strings.TrimSpace(form.Content) == "" {
+		form.FieldErrors["content"] = "Content is required"
+	}
+
+	if form.Expires != 1 && form.Expires != 7 && form.Expires != 365 {
+		form.FieldErrors["expires"] = "Expiry must be 1, 7, or 365 days"
+	}
+
+	if len(form.FieldErrors) > 0 {
+		templateData := newTemplateData(r)
+		templateData.Form = form
+		app.logger.Error("form validation failed")
+		app.render(w, r, http.StatusBadRequest, "create.tmpl", templateData)
+		return
+	}
+
+	id, err := app.snippets.Insert(form.Title, form.Content, form.Expires)
 
 	if err != nil {
 		app.serverError(w, r, err)
