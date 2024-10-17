@@ -16,3 +16,8 @@ helm upgrade my-snippetbox charts/snippetbox -n my-snippetbox --install --values
 
 # Restart the deployment to force the newly loaded image to be used
 kubectl rollout restart deployment -n my-snippetbox
+
+# Wait for the deployment to be ready
+kubectl wait --namespace my-snippetbox \
+  --for=condition=available deployment/snippetbox \
+  --timeout=120s

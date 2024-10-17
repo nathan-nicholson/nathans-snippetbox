@@ -6,6 +6,14 @@ autoscaling:
   minReplicas: 3
   maxReplicas: 5
 
+ingress:
+  enabled: true
+  className: "nginx"
+  hosts:
+    - paths:
+        - path: "/"
+          pathType: Prefix
+
 mysql:
   enabled: true
   auth:
