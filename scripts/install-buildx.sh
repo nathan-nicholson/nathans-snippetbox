@@ -3,7 +3,7 @@
 # Install docker buildx for use with docker/colima
 
 # arm64 For M1 Macs, amd64 for Intel Macs
-ARCH=${1:-arm64}
+ARCH=$("./scripts/get-arch.sh")
 VERSION=v0.17.1 # Check https://github.com/docker/buildx/releases for the latest version
 curl -LO https://github.com/docker/buildx/releases/download/${VERSION}/buildx-${VERSION}.darwin-${ARCH}
 mkdir -p ~/.docker/cli-plugins

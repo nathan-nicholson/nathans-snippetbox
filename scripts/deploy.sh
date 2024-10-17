@@ -19,5 +19,5 @@ kubectl rollout restart deployment -n my-snippetbox
 
 # Wait for the deployment to be ready
 kubectl wait --namespace my-snippetbox \
-  --for=condition=available deployment/snippetbox \
+  --for=condition=available deployment/my-snippetbox \
   --timeout=120s
